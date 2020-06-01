@@ -3,7 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
-
+void display_m(double* mac, int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        printf("  %.4lf  ", mac[i]);
+    }
+    printf("\n");
+}
 void display_macierz(double** mac, int n)
 {
     for (int i = 0; i < n; i++)
@@ -69,9 +76,9 @@ void LU_decomp(double** mat, double** upper, double** lower, double** diagonal, 
         }
     }
 }
-
 void wypelnij_mac(double** mac, int n)
 {
+    printf("Podaj dane do macierzy głównej \n");
     for (int j = 0; j < n; j++)
     {
         printf("podaj cały rząd macierz\n");
@@ -87,9 +94,39 @@ void wypelnij_mac(double** mac, int n)
     }
 }
 
-int rozwiaz_rownanie(double** mat, double** upper, double** lower, double** diagonal, int n)
+double wypelnij_y_z_wynik(double** upper, double** lower, double** diagonal, int n,double* b, double* y, double* z, double* wynik)
 {
-
+    //generuje y
+    y[0] = b[0];
+    for (int i = 0; i < n; i++)
+    {
+        double sum = 0; 
+        if (i != 0)
+        {
+            for (int k = 0; k < i ; k++)
+            {
+                
+                sum = sum + (lower[i][k] * y[k]);
+            }
+            y[i] =b[i] - sum; 
+        }
+    }
+    //generuje z
+    for (int i = 0; i < n; i++)
+    {
+        z[i] = y[i] / diagonal[i][i];
+    }
+    //generuje wynik
+    wynik[n] = z[n];
+    for (int i = 0; i < n; i++)
+    {
+        double sum = 0; 
+        for (int k = i + 1; k < n; k++)
+        {
+            sum = sum + lower[i][k] *wynik[k]; 
+        }
+        wynik[i] = z[i] + sum; 
+    }
 }
 void zeruj(double** mac, int  n)
 {
@@ -99,6 +136,13 @@ void zeruj(double** mac, int  n)
         {
             mac[j][i] = 0;
         }
+    }
+}
+void zeruj_2(double* mac, int n)
+{
+    for (int j = 0; j < n; j++)
+    {
+        mac[j] = 0;
     }
 }
 int main()
@@ -113,7 +157,7 @@ int main()
     //////////////////////// alokacje pamięci
     double** diagonal;
     diagonal = (double**)malloc(sizeof(double*) * n);
-    if (!diagonal) printf("coś sie popsuło");
+    if (!diagonal) printf("coś sie popsuło w diagonal ");
     for (int i = 0; i < n; i++)
     {
         diagonal[i] = (double**)malloc(sizeof(int*) * n);
@@ -121,7 +165,7 @@ int main()
     }
     double** lower;
     lower = (double**)malloc(sizeof(double*) * n);
-    if (!lower) printf("coś sie popsuło");
+    if (!lower) printf("coś sie popsuło w lower ");
     for (int i = 0; i < n; i++)
     {
         lower[i] = (double**)malloc(sizeof(double*) * n);
@@ -129,7 +173,7 @@ int main()
     }
     double** upper;
     upper = (double**)malloc(sizeof(double*) * n);
-    if (!upper) printf("coś sie popsuło");
+    if (!upper) printf("coś sie popsuło w upper ");
     for (int i = 0; i < n; i++)
     {
         upper[i] = (double**)malloc(sizeof(double*) * n);
@@ -137,12 +181,40 @@ int main()
     }
     double** mac;
     mac = (double**)malloc(sizeof(double*) * n);
-    if (!mac) printf("coś sie popsuło");
+    if (!mac) printf("coś sie popsuło w mac");
     for (int i = 0; i < n; i++)
     {
         mac[i] = (double**)malloc(sizeof(double*) * n);
         if (!mac[i]) printf("coś sie popsuło");
     }
+
+    double* y;
+    y = (double*)malloc(sizeof(double*) * n);
+    if (!y) printf("coś sie popsuło w y");
+    double* z;
+     z= (double*)malloc(sizeof(double*) * n);
+     if (!z) printf("coś sie popsuło w z");
+    double* wynik  ;
+    wynik = (double*)malloc(sizeof(double*) * n);
+    if (!wynik) printf("coś sie popsuło w wynik");
+    double* b;
+    b = (double*)malloc(sizeof(double*) * n);
+    if (!b) printf("coś sie popsuło w b ");
+    for (int i = 0; i < n; i++)
+    {
+        printf("Podaj dane do liczby b \n");
+        printf("liczba %d to ", i);
+        int x = 0;
+        scanf_s("%d", &x);
+        double y = 0;
+        y = (double)x;
+        b[i] = y;
+    }
+
+    zeruj_2(y, n);
+    zeruj_2(z, n);
+    zeruj_2(wynik, n);
+    
     ////////////////////
     zeruj(diagonal, n);
     display_macierz(diagonal, n);
@@ -162,7 +234,15 @@ int main()
     printf("macierz diagonalna \n");
     display_macierz(diagonal, n);
 
-
+    wypelnij_y_z_wynik(upper, lower, diagonal, n, b, y, z, wynik);
+    printf("\nwektor b : ");
+    display_m(b, n);
+    printf("\nwektor y : ");
+    display_m(y, n);
+    printf("\nwektor z : ");
+    display_m(z, n);
+    printf("\nwynik to :");
+    display_m(wynik, n);
 }
 
 // Uruchomienie programu: Ctrl + F5 lub menu Debugowanie > Uruchom bez debugowania
